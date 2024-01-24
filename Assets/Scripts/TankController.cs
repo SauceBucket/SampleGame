@@ -4,12 +4,9 @@ using UnityEngine;
 
 public class TankController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float groundSnapDelay = 0.1f;
+    [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float groundOffset = 1.0f;
-    [SerializeField] private float snapDistance = 0.2f;
-
-    [SerializeField] private bool isGrounded;
+    [SerializeField] private float snapDistance = 0.1f;
     
     private Rigidbody2D rb;
     private Vector3 groundSnapTarget;    
@@ -30,29 +27,40 @@ public class TankController : MonoBehaviour
         HandleGroundSnap();
     }
 
-    void HandleGroundSnap()
+    private void HandleGroundSnap()
     {
         // Perform the raycast
         var hit = Physics2D.Raycast(transform.position, Vector2.down);
 
+        //Check for hit
         if (hit.collider != null && hit.collider.CompareTag("Ground"))
         {
+
+            //Find the length of distance between player's position and ground
             var difference = (transform.position.y - groundOffset) - hit.point.y;
-            Debug.Log(difference);
+
+            //If the distance is close, just teleport snap
             if(Mathf.Abs(difference) < snapDistance){
-                Vector2 movement = new Vector2(horizontal, -difference) * moveSpeed * Time.deltaTime;
-                rb.MovePosition(rb.position + movement);
+                TranslatePlayer(-transform.position.y + (hit.point.y + groundOffset));
             }
-            else if(difference > 0){
-                Vector2 movement = new Vector2(horizontal, -1f) * moveSpeed * Time.deltaTime;
-                rb.MovePosition(rb.position + movement);
+
+            //If player is below the ground (positive distance), make the player go up (over time)
+            else if(difference < 0){
+                TranslatePlayer(1 * moveSpeed * Time.deltaTime);
             }
+
+            //The player must be above ground, make them fall (over time)
             else{
-                Vector2 movement = new Vector2(horizontal, 1f) * moveSpeed * Time.deltaTime;
-                rb.MovePosition(rb.position + movement);
+                TranslatePlayer(-1 * moveSpeed * Time.deltaTime);
             }
         }
     }
 
+    private void TranslatePlayer(float verticalPosition){
+        var tempPosition = transform.position;
+        tempPosition.y += verticalPosition;
+        tempPosition.x += horizontal * moveSpeed * Time.deltaTime;
+        transform.position = tempPosition;
+    }
 
 }
