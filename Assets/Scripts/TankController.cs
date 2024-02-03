@@ -33,7 +33,7 @@ public class TankController : MonoBehaviour
         var hit = Physics2D.Raycast(transform.position, Vector2.down);
 
         //Check for hit
-        if (hit.collider != null && hit.collider.CompareTag("Ground"))
+        if (hit.collider != null)
         {
 
             //Find the length of distance between player's position and ground
