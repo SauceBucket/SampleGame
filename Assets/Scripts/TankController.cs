@@ -37,7 +37,7 @@ public class TankController : MonoBehaviour
         {
 
             //Find the length of distance between player's position and ground
-            var difference = (transform.position.y - groundOffset) - hit.point.y;
+            var difference = centerRaycastHit.distance - groundOffset;
 
             //If the distance is close, just teleport snap
             if(Mathf.Abs(difference) < snapDistance){
