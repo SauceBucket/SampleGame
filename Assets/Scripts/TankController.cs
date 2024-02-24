@@ -1,112 +1,66 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class TankController : MonoBehaviour
 {
-    // Debug
-    [SerializeField] private bool DoGizmosDebugDrawing = false;
+    [SerializeField] private float moveSpeed = 2f;
+    [SerializeField] private float groundOffset = 1.0f;
+    [SerializeField] private float snapDistance = 0.1f;
+    
+    private Rigidbody2D rb;
+    private Vector3 groundSnapTarget;    
+    private float horizontal = 0f;
 
-    // Movement
-    [SerializeField] private float MoveSpeed = 2f;
-
-    // Ground snapping vars
-    [SerializeField] private float GroundOffset = 1.0f;
-    [SerializeField] private float GroundSnapDistance = 0.1f;
-
-    // Tank measurements
-    [SerializeField] private float TankWidth = 1.0f;
-    [SerializeField] private float TankHeight = 3f;
-
-    // Position tracking
-    private float HorizontalInput = 0f;
-    private float TargetAngle = 0f;
-
-    // Raycasts
-    private RaycastHit2D CenterRaycastHit;
-    private RaycastHit2D LeftRaycastHit;
-    private RaycastHit2D RightRaycastHit;
+    void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+    }
 
     void Update()
     {
-        HorizontalInput = Input.GetAxis("Horizontal");
+        horizontal = Input.GetAxis("Horizontal");        
     }
 
     void FixedUpdate()
-    {
+    {        
         HandleGroundSnap();
-    }
-
-    void OnDrawGizmos()
-    {
-        if (!DoGizmosDebugDrawing) return;
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(CenterRaycastHit.point, 0.1f);
-        Gizmos.DrawSphere(LeftRaycastHit.point, 0.1f);
-        Gizmos.DrawSphere(RightRaycastHit.point, 0.1f);
     }
 
     private void HandleGroundSnap()
     {
         // Perform the raycast
-        CenterRaycastHit = Physics2D.Raycast(transform.position, Vector2.down);
+        var hit = Physics2D.Raycast(transform.position, Vector2.down);
 
-        LeftRaycastHit = Physics2D.Raycast(new Vector2(transform.position.x - TankWidth, transform.position.y + TankHeight), Vector2.down);
-        RightRaycastHit = Physics2D.Raycast(new Vector2(transform.position.x + TankWidth, transform.position.y + TankHeight), Vector2.down);
-
-        // Guard against failed raycasts
-        if (CenterRaycastHit.point == null || LeftRaycastHit.point == null || RightRaycastHit.point == null)
+        //Check for hit
+        if (hit.collider != null && hit.collider.CompareTag("Ground"))
         {
-            transform.position = new Vector3(0f, 0f, 0f);
-            transform.rotation = Quaternion.Euler(0f, 0f, 0f);
-            return;  
-        }
 
-        // Find the length of distance between player's position and ground
-        var difference = CenterRaycastHit.distance - GroundOffset;
+            //Find the length of distance between player's position and ground
+            var difference = (transform.position.y - groundOffset) - hit.point.y;
 
-        // If the distance is close, just teleport snap
-        if (Mathf.Abs(difference) < GroundSnapDistance)
-        {
-            TranslatePlayer(-transform.position.y + (CenterRaycastHit.point.y + GroundOffset));
-        }
+            //If the distance is close, just teleport snap
+            if(Mathf.Abs(difference) < snapDistance){
+                TranslatePlayer(-transform.position.y + (hit.point.y + groundOffset));
+            }
 
-        // If player is below the ground (positive distance), make the player go up (over time)
-        else if (difference < 0)
-        {
-            TranslatePlayer(1 * MoveSpeed * Time.deltaTime);
-        }
-        
-        // The player must be above ground, make them fall (over time)
-        else
-        {
-            TranslatePlayer(-1 * MoveSpeed * Time.deltaTime);
-        }
+            //If player is below the ground (positive distance), make the player go up (over time)
+            else if(difference < 0){
+                TranslatePlayer(1 * moveSpeed * Time.deltaTime);
+            }
 
-        // Tank rotation - don't rotate the tank if the tank is too far above the ground
-        if ((LeftRaycastHit.distance - TankHeight) < GroundOffset || (RightRaycastHit.distance - TankHeight) < GroundOffset)
-        {
-            //Get angle based on the left & right raycast hits
-            TargetAngle = Mathf.Atan2(RightRaycastHit.point.y - LeftRaycastHit.point.y,
-                                      RightRaycastHit.point.x - LeftRaycastHit.point.x)
-
-            // The above Atan2 outputs radians, so convert to degrees:
-            * (180 / 3.1485f);
-
-            // Adjust the angle slowly
-            TargetAngle = Mathf.MoveTowardsAngle(transform.rotation.eulerAngles.z, TargetAngle, MoveSpeed);
+            //The player must be above ground, make them fall (over time)
+            else{
+                TranslatePlayer(-1 * moveSpeed * Time.deltaTime);
+            }
         }
     }
 
-    private void TranslatePlayer(float verticalPosition)
-    {
-        // Calculate position
+    private void TranslatePlayer(float verticalPosition){
         var tempPosition = transform.position;
         tempPosition.y += verticalPosition;
-        tempPosition.x += HorizontalInput * MoveSpeed * Time.deltaTime;
-
-        // Set it
+        tempPosition.x += horizontal * moveSpeed * Time.deltaTime;
         transform.position = tempPosition;
-        transform.rotation = Quaternion.Euler(0f, 0f, TargetAngle);
     }
 
 }
