@@ -29,6 +29,8 @@ public class VoxelMap : MonoBehaviour
 
     public bool snapToGrid;
 
+    public float maxFeatureAngle = 135f;
+
     VoxelStencil[] Stencil_List = { 
         new VoxelStencil(),
         new VoxelStencilCircle()
@@ -58,7 +60,7 @@ public class VoxelMap : MonoBehaviour
         {
             for (int x = 0; x < chunkResolution; x++, i++)
             {
-                CreateChunk(i, x, y);
+                CreateChunk(i, x, y, maxFeatureAngle);
             }
         }
   
@@ -150,10 +152,10 @@ public class VoxelMap : MonoBehaviour
         //Debug.Log(centerX + ", " + centerY + "in chunk " + chunkx+", " + chunky);
     }
 
-    private void CreateChunk(int i, int x, int y)
+    private void CreateChunk(int i, int x, int y, float maxangle)
     {
         VoxelGrid chunk = Instantiate(voxelGridPrefab) as VoxelGrid;
-        chunk.Initialize(VoxelGridResolution, chunkSize);
+        chunk.Initialize(VoxelGridResolution, chunkSize, maxangle);
         chunk.transform.parent = transform;
         chunk.transform.localPosition = new Vector3(x * chunkSize - halfSize, y * chunkSize - halfSize);
         chunks[i] = chunk;

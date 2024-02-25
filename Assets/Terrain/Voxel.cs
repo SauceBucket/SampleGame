@@ -11,6 +11,7 @@ public class Voxel
     public bool state;
     public Vector2 position;
     public float xEdgePosition, yEdgePosition;
+    public Vector2 xNormal, yNormal;
 
     public Voxel(int x , int y , float size) {
 
@@ -34,7 +35,7 @@ public class Voxel
         position.x += offset;
         xEdgePosition = voxel.xEdgePosition + offset;
         yEdgePosition = voxel.yEdgePosition;
-
+        yNormal = voxel.yNormal;    
     }
 
     public void BecomeDummyOf_YDir(Voxel voxel, float offset)
@@ -44,9 +45,9 @@ public class Voxel
         position.y += offset;
         xEdgePosition = voxel.xEdgePosition;
         yEdgePosition = voxel.yEdgePosition + offset;
+        xNormal = voxel.xNormal;
 
 
-       
 
 
     }
